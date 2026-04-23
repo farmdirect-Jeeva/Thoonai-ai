@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JVFS83MYWG"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag("js", new Date());
+  gtag("config", "G-JVFS83MYWG");
+</script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GK Library | Thoonai AI</title>
+<link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<div id="hdr-mount"></div>
+<main style="flex:1;">
+  <div class="wrap" style="padding-bottom:60px;">
+    <div class="page-hdr">
+      <div class="section-label">Static GK</div>
+      <h1>GK Library</h1>
+      <div class="deco-line"></div>
+      <p style="color:var(--txt2);max-width:580px;font-size:.93rem;margin-top:4px;">6 subjects, 14+ curated topics with exam-ready key facts — all syllabus-mapped.</p>
+    </div>
+    <div class="gk-stats">
+      <div class="card stat-card"><div class="n">6</div><div class="l">Subjects</div></div>
+      <div class="card stat-card"><div class="n">14+</div><div class="l">Topics</div></div>
+      <div class="card stat-card"><div class="n">100%</div><div class="l">Syllabus-Mapped</div></div>
+    </div>
+    <div class="grid-2" id="gk-grid"></div>
+  </div>
+</main>
+
+<div class="modal-bg" id="modal" onclick="closeModal(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-subj-label" id="m-subj"></div>
+    <h2 class="modal-title" id="m-title"></h2>
+    <div class="deco-line"></div>
+    <div class="facts-lbl">⭐ Key Facts for Exam</div>
+    <div id="m-facts"></div>
+    <div class="modal-tip"><span class="tip-em">💡 Tip: </span>For Mains, link these facts to current affairs. Integrated answers score significantly higher!</div>
+  </div>
+</div>
+
+<div id="ftr-mount"></div>
+<script src="js/common.js"></script>
+<script src="js/gkdata.js"></script>
+<script>
+document.getElementById('hdr-mount').outerHTML = buildHeader('gk');
+document.getElementById('ftr-mount').outerHTML = buildFooter();
+checkScreenSize();
+
+document.getElementById('gk-grid').innerHTML = GK.map((s,si) => `
+  <div class="card subj-card anim-up" style="animation-delay:${si*70}ms;">
+    <div class="subj-hdr" onclick="toggleSub('${s.id}')">
+      <div class="subj-left">
+        <span class="subj-emoji">${s.emoji}</span>
+        <div>
+          <div class="subj-name">${s.title}</div>
+          <div class="subj-count">${s.topics.length} topic${s.topics.length!==1?'s':''}</div>
+        </div>
+      </div>
+      <span class="chev" id="ch-${s.id}">›</span>
+    </div>
+    <p class="subj-desc">${s.desc}</p>
+    <div class="topics-list" id="tl-${s.id}">
+      ${s.topics.map((t,ti) => `
+        <button class="topic-btn" onclick="openModal('${s.id}',${ti})">
+          <span class="topic-name">📖 ${t.title}</span>
+          <span class="rel-b ${t.rel==='High'?'rel-high':'rel-med'}">${t.rel==='High'?'⭐ ':''}Exam ${t.rel}</span>
+        </button>`).join('')}
+    </div>
+  </div>`).join('');
+
+function toggleSub(id) {
+  document.getElementById('tl-'+id).classList.toggle('open');
+  document.getElementById('ch-'+id).classList.toggle('open');
+}
+function openModal(sid, ti) {
+  const s = GK.find(x=>x.id===sid), t = s.topics[ti];
+  document.getElementById('m-subj').textContent  = `${s.title} › ${t.rel==='High'?'⭐ ':''}Exam ${t.rel}`;
+  document.getElementById('m-title').textContent = t.title;
+  document.getElementById('m-facts').innerHTML   = t.facts.map((f,i)=>`
+    <div class="fact-row"><span class="fact-num">${i+1}</span><span>${f}</span></div>`).join('');
+  document.getElementById('modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+</script>
+</body>
+</html>
