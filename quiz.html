@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Quiz — Thoonai AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --card: #ffffff;
+    --text: #1a1a2e;
+    --muted: #6b7280;
+    --accent: #7c3aed;
+    --accent2: #f59e0b;
+    --green: #10b981;
+    --red: #ef4444;
+    --border: #e5e7eb;
+    --shadow: 0 4px 24px rgba(0,0,0,0.08);
+  }
+  [data-theme="dark"] {
+    --bg: #0f0f1a;
+    --card: #1a1a2e;
+    --text: #f0ece0;
+    --muted: #9ca3af;
+    --border: #2d2d44;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* NAV */
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .nav-logo span { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--accent); }
+  .nav-badge { font-size: 0.65rem; background: var(--accent); color: white; padding: 2px 8px; border-radius: 20px; }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .theme-btn {
+    background: none; border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 10px; cursor: pointer; color: var(--text); font-size: 1rem;
+  }
+  .home-btn {
+    background: var(--accent); color: white; border: none; border-radius: 8px;
+    padding: 8px 14px; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+    text-decoration: none;
+  }
+
+  /* MAIN */
+  main { max-width: 680px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  /* HEADER */
+  .page-header { text-align: center; margin-bottom: 28px; }
+  .page-header h1 { font-family: 'Playfair Display', serif; font-size: 2rem; margin-bottom: 6px; }
+  .page-header p { color: var(--muted); font-size: 0.9rem; }
+
+  /* SETUP CARD */
+  .setup-card {
+    background: var(--card); border-radius: 16px; padding: 24px;
+    box-shadow: var(--shadow); border: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+  .setup-card h2 { font-size: 1rem; font-weight: 600; margin-bottom: 16px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .opt-btn {
+    padding: 10px 8px; border-radius: 10px; border: 2px solid var(--border);
+    background: var(--bg); color: var(--text); font-size: 0.82rem; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; text-align: center;
+  }
+  .opt-btn.active { border-color: var(--accent); background: var(--accent); color: white; }
+  .opt-btn:hover:not(.active) { border-color: var(--accent); }
+
+  .api-row { display: flex; gap: 8px; margin-bottom: 16px; }
+  .api-input {
+    flex: 1; padding: 10px 14px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--bg);
+    color: var(--text); font-size: 0.85rem; outline: none;
+  }
+  .api-input:focus { border-color: var(--accent); }
+  .api-save {
+    padding: 10px 16px; border-radius: 10px; background: var(--accent);
+    color: white; border: none; font-weight: 600; font-size: 0.82rem; cursor: pointer;
+  }
+  .api-hint { font-size: 0.75rem; color: var(--muted); margin-top: -10px; margin-bottom: 14px; }
+  .api-hint a { color: var(--accent); }
+
+  .start-btn {
+    width: 100%; padding: 14px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), #9333ea);
+    color: white; border: none; font-size: 1rem; font-weight: 700;
+    cursor: pointer; transition: opacity 0.2s; letter-spacing: 0.02em;
+  }
+  .start-btn:hover { opacity: 0.9; }
+  .start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* LOADING */
+  .loading-card {
+    background: var(--card); border-radius: 16px; padding: 48px 24px;
+    box-shadow: var(--shadow); text-align: center; display: none;
+  }
+  .spinner {
+    width: 48px; height: 48px; border: 4px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* QUIZ CARD */
+  .quiz-card {
+    background: var(--card); border-radius: 16px; padding: 24px;
+    box-shadow: var(--shadow); border: 1px solid var(--border); display: none;
+  }
+  .quiz-meta {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px;
+  }
+  .q-counter { font-size: 0.8rem; color: var(--muted); font-weight: 600; }
+  .q-cat { font-size: 0.75rem; background: var(--accent); color: white; padding: 3px 10px; border-radius: 20px; }
+  .progress-bar { height: 4px; background: var(--border); border-radius: 4px; margin-bottom: 20px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.4s; }
+  .question-text { font-size: 1rem; font-weight: 600; line-height: 1.6; margin-bottom: 20px; }
+
+  .options-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .option-item {
+    padding: 12px 16px; border-radius: 10px; border: 2px solid var(--border);
+    background: var(--bg); cursor: pointer; font-size: 0.88rem;
+    transition: all 0.2s; display: flex; align-items: center; gap: 10px;
+  }
+  .option-item:hover:not(.disabled) { border-color: var(--accent); background: var(--card); }
+  .option-item.correct { border-color: var(--green); background: #d1fae5; color: #065f46; }
+  .option-item.wrong { border-color: var(--red); background: #fee2e2; color: #991b1b; }
+  .option-item.disabled { cursor: default; }
+  .opt-label {
+    width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700; flex-shrink: 0;
+  }
+
+  .explanation {
+    background: #ede9fe; border-left: 4px solid var(--accent);
+    border-radius: 8px; padding: 12px 14px; font-size: 0.82rem;
+    color: #4c1d95; line-height: 1.6; margin-bottom: 16px; display: none;
+  }
+  [data-theme="dark"] .explanation { background: #2d1f4e; color: #c4b5fd; }
+
+  .next-btn {
+    width: 100%; padding: 13px; border-radius: 10px;
+    background: var(--accent); color: white; border: none;
+    font-size: 0.95rem; font-weight: 700; cursor: pointer; display: none;
+  }
+
+  /* RESULT CARD */
+  .result-card {
+    background: var(--card); border-radius: 16px; padding: 32px 24px;
+    box-shadow: var(--shadow); text-align: center; display: none;
+  }
+  .score-circle {
+    width: 120px; height: 120px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #9333ea);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    margin: 0 auto 20px; color: white;
+  }
+  .score-num { font-family: 'Playfair Display', serif; font-size: 2.2rem; line-height: 1; }
+  .score-total { font-size: 0.75rem; opacity: 0.8; }
+  .result-card h2 { font-family: 'Playfair Display', serif; font-size: 1.6rem; margin-bottom: 8px; }
+  .result-msg { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
+  .stats-row { display: flex; justify-content: center; gap: 24px; margin-bottom: 24px; }
+  .stat-item { text-align: center; }
+  .stat-num { font-size: 1.4rem; font-weight: 700; }
+  .stat-label { font-size: 0.75rem; color: var(--muted); }
+  .result-btns { display: flex; gap: 10px; }
+  .retry-btn {
+    flex: 1; padding: 13px; border-radius: 10px; background: var(--accent);
+    color: white; border: none; font-weight: 700; cursor: pointer; font-size: 0.9rem;
+  }
+  .review-btn {
+    flex: 1; padding: 13px; border-radius: 10px; background: var(--bg);
+    color: var(--text); border: 2px solid var(--border); font-weight: 700;
+    cursor: pointer; font-size: 0.9rem;
+  }
+
+  /* REVIEW */
+  .review-card {
+    background: var(--card); border-radius: 16px; padding: 24px;
+    box-shadow: var(--shadow); display: none; margin-top: 16px;
+  }
+  .review-item { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .review-item:last-child { border-bottom: none; margin-bottom: 0; }
+  .review-q { font-size: 0.88rem; font-weight: 600; margin-bottom: 8px; }
+  .review-ans { font-size: 0.82rem; padding: 6px 12px; border-radius: 6px; margin-bottom: 4px; }
+  .review-ans.correct { background: #d1fae5; color: #065f46; }
+  .review-ans.wrong { background: #fee2e2; color: #991b1b; }
+  .review-exp { font-size: 0.78rem; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+
+  .error-msg { background: #fee2e2; color: #991b1b; border-radius: 10px; padding: 14px; font-size: 0.85rem; margin-top: 12px; display: none; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">
+    <span>Thoonai AI</span>
+    <div class="nav-badge">✨ Claude AI</div>
+  </a>
+  <div class="nav-right">
+    <button class="theme-btn" onclick="toggleTheme()">🌙</button>
+    <a class="home-btn" href="index.html">🏠 Home</a>
+  </div>
+</nav>
+
+<main>
+  <div class="page-header">
+    <h1>📝 Practice Quiz</h1>
+    <p>AI-generated MCQs for UPSC & TNPSC preparation</p>
+  </div>
+
+  <!-- SETUP -->
+  <div class="setup-card" id="setupCard">
+    <h2>Choose Topic</h2>
+    <div class="option-grid" id="topicGrid">
+      <button class="opt-btn active" onclick="selectTopic(this,'All Topics')">🌐 All Topics</button>
+      <button class="opt-btn" onclick="selectTopic(this,'Polity')">⚖️ Polity</button>
+      <button class="opt-btn" onclick="selectTopic(this,'Economy')">💰 Economy</button>
+      <button class="opt-btn" onclick="selectTopic(this,'History')">🏛️ History</button>
+      <button class="opt-btn" onclick="selectTopic(this,'Geography')">🗺️ Geography</button>
+      <button class="opt-btn" onclick="selectTopic(this,'Science & Tech')">🔬 Science & Tech</button>
+      <button class="opt-btn" onclick="selectTopic(this,'Environment')">🌿 Environment</button>
+      <button class="opt-btn" onclick="selectTopic(this,'Tamil Nadu')">🏠 Tamil Nadu</button>
+    </div>
+
+    <h2>Number of Questions</h2>
+    <div class="option-grid" id="countGrid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
+      <button class="opt-btn" onclick="selectCount(this,5)">5</button>
+      <button class="opt-btn active" onclick="selectCount(this,10)">10</button>
+      <button class="opt-btn" onclick="selectCount(this,15)">15</button>
+      <button class="opt-btn" onclick="selectCount(this,20)">20</button>
+    </div>
+
+    <h2>Groq API Key</h2>
+    <div class="api-row">
+      <input class="api-input" id="apiInput" type="password" placeholder="gsk_xxxxxxxxxxxxxxxx"/>
+      <button class="api-save" onclick="saveKey()">Save</button>
+    </div>
+    <p class="api-hint">Get free key at <a href="https://console.groq.com" target="_blank">console.groq.com</a></p>
+
+    <button class="start-btn" id="startBtn" onclick="startQuiz()">🚀 Start Quiz</button>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading-card" id="loadingCard">
+    <div class="spinner"></div>
+    <p style="font-weight:600">Generating questions with AI...</p>
+    <p style="color:var(--muted);font-size:0.85rem;margin-top:6px">Please wait a moment</p>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-card" id="quizCard">
+    <div class="quiz-meta">
+      <span class="q-counter" id="qCounter">Question 1 of 10</span>
+      <span class="q-cat" id="qCat">Polity</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:10%"></div></div>
+    <div class="question-text" id="questionText"></div>
+    <div class="options-list" id="optionsList"></div>
+    <div class="explanation" id="explanation"></div>
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next Question →</button>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result-card" id="resultCard">
+    <div class="score-circle">
+      <div class="score-num" id="scoreNum">0</div>
+      <div class="score-total" id="scoreTotal">/ 10</div>
+    </div>
+    <h2 id="resultTitle">Well Done!</h2>
+    <p class="result-msg" id="resultMsg">Keep practicing to improve your score!</p>
+    <div class="stats-row">
+      <div class="stat-item">
+        <div class="stat-num" id="correctCount" style="color:var(--green)">0</div>
+        <div class="stat-label">Correct</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="wrongCount" style="color:var(--red)">0</div>
+        <div class="stat-label">Wrong</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num" id="percentScore" style="color:var(--accent)">0%</div>
+        <div class="stat-label">Score</div>
+      </div>
+    </div>
+    <div class="result-btns">
+      <button class="retry-btn" onclick="retryQuiz()">🔄 Try Again</button>
+      <button class="review-btn" onclick="showReview()">📋 Review</button>
+    </div>
+  </div>
+
+  <!-- REVIEW -->
+  <div class="review-card" id="reviewCard">
+    <h2 style="font-family:'Playfair Display',serif;margin-bottom:20px">📋 Answer Review</h2>
+    <div id="reviewList"></div>
+  </div>
+
+</main>
+
+<script>
+let selectedTopic = 'All Topics';
+let selectedCount = 10;
+let questions = [];
+let currentQ = 0;
+let score = 0;
+let userAnswers = [];
+
+// Theme
+const saved = localStorage.getItem('thoonai-theme') || 'light';
+document.documentElement.setAttribute('data-theme', saved);
+function toggleTheme() {
+  const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('thoonai-theme', t);
+}
+
+// API Key
+const savedKey = localStorage.getItem('groq-api-key') || '';
+if (savedKey) document.getElementById('apiInput').value = savedKey;
+function saveKey() {
+  const k = document.getElementById('apiInput').value.trim();
+  if (k) { localStorage.setItem('groq-api-key', k); showError('✅ API key saved!', '#d1fae5', '#065f46'); }
+}
+function getApiKey() { return localStorage.getItem('groq-api-key') || document.getElementById('apiInput').value.trim(); }
+
+function selectTopic(btn, topic) {
+  document.querySelectorAll('#topicGrid .opt-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedTopic = topic;
+}
+function selectCount(btn, count) {
+  document.querySelectorAll('#countGrid .opt-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedCount = count;
+}
+
+function show(id) { document.getElementById(id).style.display = 'block'; }
+function hide(id) { document.getElementById(id).style.display = 'none'; }
+function showError(msg, bg='#fee2e2', color='#991b1b') {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg; el.style.background = bg; el.style.color = color;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+
+async function startQuiz() {
+  const key = getApiKey();
+  if (!key) { showError('⚠️ Please enter your Groq API key first!'); return; }
+
+  hide('setupCard'); show('loadingCard');
+
+  try {
+    const prompt = `Generate ${selectedCount} MCQ questions for Indian competitive exams (UPSC/TNPSC).
+Topic: ${selectedTopic === 'All Topics' ? 'Mix of Polity, Economy, History, Geography, Science, Environment, Tamil Nadu' : selectedTopic}
+
+Return ONLY a raw JSON array. No markdown. No backticks. Start with [ end with ].
+
+Format:
+[{"q":"question text","options":["A) option1","B) option2","C) option3","D) option4"],"answer":"A","explanation":"brief explanation 1-2 lines","cat":"category"}]
+
+Make questions exam-relevant, factual, and varied difficulty.`;
+
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: 'You are an expert exam coach. Return only raw JSON arrays, no markdown.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.7, max_tokens: 4000
+      })
+    });
+
+    if (!res.ok) throw new Error('API error: ' + res.status);
+    const data = await res.json();
+    let text = data?.choices?.[0]?.message?.content || '';
+    text = text.replace(/```json/gi,'').replace(/```/g,'').trim();
+    const s = text.indexOf('['), e = text.lastIndexOf(']');
+    if (s === -1) throw new Error('Invalid response');
+    questions = JSON.parse(text.substring(s, e+1));
+    if (!questions.length) throw new Error('No questions generated');
+
+    currentQ = 0; score = 0; userAnswers = [];
+    hide('loadingCard');
+    renderQuestion();
+    show('quizCard');
+  } catch(err) {
+    hide('loadingCard'); show('setupCard');
+    showError('❌ ' + (err.message || 'Failed to generate questions. Check your API key.'));
+  }
+}
+
+function renderQuestion() {
+  const q = questions[currentQ];
+  document.getElementById('qCounter').textContent = `Question ${currentQ+1} of ${questions.length}`;
+  document.getElementById('qCat').textContent = q.cat || selectedTopic;
+  document.getElementById('progressFill').style.width = ((currentQ+1)/questions.length*100) + '%';
+  document.getElementById('questionText').textContent = q.q;
+
+  const list = document.getElementById('optionsList');
+  list.innerHTML = '';
+  const labels = ['A','B','C','D'];
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-item';
+    btn.innerHTML = `<span class="opt-label">${labels[i]}</span>${opt.replace(/^[A-D]\)\s*/,'')}`;
+    btn.onclick = () => selectAnswer(labels[i], btn);
+    list.appendChild(btn);
+  });
+
+  document.getElementById('explanation').style.display = 'none';
+  document.getElementById('nextBtn').style.display = 'none';
+}
+
+function selectAnswer(chosen, btnEl) {
+  const q = questions[currentQ];
+  const correct = q.answer;
+  const allBtns = document.querySelectorAll('.option-item');
+  const labels = ['A','B','C','D'];
+
+  allBtns.forEach((b, i) => {
+    b.classList.add('disabled');
+    b.onclick = null;
+    if (labels[i] === correct) b.classList.add('correct');
+    else if (b === btnEl) b.classList.add('wrong');
+  });
+
+  const isCorrect = chosen === correct;
+  if (isCorrect) score++;
+  userAnswers.push({ q: q.q, chosen, correct, explanation: q.explanation, isCorrect, options: q.options });
+
+  const expEl = document.getElementById('explanation');
+  expEl.textContent = '💡 ' + (q.explanation || 'The correct answer is ' + correct + '.');
+  expEl.style.display = 'block';
+
+  const nextBtn = document.getElementById('nextBtn');
+  nextBtn.style.display = 'block';
+  nextBtn.textContent = currentQ < questions.length - 1 ? 'Next Question →' : 'See Results 🎯';
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ < questions.length) {
+    renderQuestion();
+  } else {
+    showResults();
+  }
+}
+
+function showResults() {
+  hide('quizCard');
+  const total = questions.length;
+  const pct = Math.round(score/total*100);
+  document.getElementById('scoreNum').textContent = score;
+  document.getElementById('scoreTotal').textContent = '/ ' + total;
+  document.getElementById('correctCount').textContent = score;
+  document.getElementById('wrongCount').textContent = total - score;
+  document.getElementById('percentScore').textContent = pct + '%';
+
+  let title, msg;
+  if (pct >= 80) { title = '🏆 Excellent!'; msg = 'Outstanding performance! You are exam-ready!'; }
+  else if (pct >= 60) { title = '👍 Good Job!'; msg = 'Good effort! A little more practice and you will ace it!'; }
+  else if (pct >= 40) { title = '📚 Keep Going!'; msg = 'Nice try! Review the topics and try again.'; }
+  else { title = '💪 Keep Practicing!'; msg = 'Don\'t give up! Practice makes perfect.'; }
+
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultMsg').textContent = msg;
+  show('resultCard');
+}
+
+function retryQuiz() {
+  hide('resultCard'); hide('reviewCard');
+  show('setupCard');
+}
+
+function showReview() {
+  const list = document.getElementById('reviewList');
+  list.innerHTML = '';
+  userAnswers.forEach((a, i) => {
+    const labels = ['A','B','C','D'];
+    const correctOpt = a.options.find(o => o.startsWith(a.correct + ')')) || a.correct;
+    const chosenOpt = a.options.find(o => o.startsWith(a.chosen + ')')) || a.chosen;
+
+    list.innerHTML += `
+      <div class="review-item">
+        <div class="review-q">Q${i+1}. ${a.q}</div>
+        <div class="review-ans ${a.isCorrect ? 'correct' : 'wrong'}">
+          ${a.isCorrect ? '✅' : '❌'} Your answer: ${chosenOpt.replace(/^[A-D]\)\s*/,'')}
+        </div>
+        ${!a.isCorrect ? `<div class="review-ans correct">✅ Correct: ${correctOpt.replace(/^[A-D]\)\s*/,'')}</div>` : ''}
+        <div class="review-exp">💡 ${a.explanation || ''}</div>
+      </div>`;
+  });
+  show('reviewCard');
+  document.getElementById('reviewCard').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
