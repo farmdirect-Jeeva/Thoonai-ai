@@ -1,0 +1,21 @@
+{
+  "name": "Thoonai AI — Exam Companion",
+  "short_name": "Thoonai AI",
+  "description": "AI-powered study assistant for UPSC & TNPSC aspirants with daily current affairs",
+  "start_url": "/Thoonai-ai/index.html",
+  "scope": "/Thoonai-ai/",
+  "display": "standalone",
+  "background_color": "#f5f0e8",
+  "theme_color": "#B84D24",
+  "orientation": "portrait",
+  "icons": [
+    {"src": "icon-192.png","sizes": "192x192","type": "image/png","purpose": "any maskable"},
+    {"src": "icon-512.png","sizes": "512x512","type": "image/png","purpose": "any maskable"}
+  ],
+  "categories": ["education","productivity"],
+  "shortcuts": [
+    {"name": "Current Affairs","short_name": "News","description": "Today's current affairs","url": "/Thoonai-ai/current-affairs.html"},
+    {"name": "Practice Quiz","short_name": "Quiz","description": "Test your knowledge","url": "/Thoonai-ai/quiz.html"},
+    {"name": "Bookmarks","short_name": "Saved","description": "Saved articles","url": "/Thoonai-ai/bookmarks.html"}
+  ]
+}
